@@ -9,7 +9,6 @@ import Alert from '@mui/material/Alert';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Link from '@mui/material/Link';
-import axios from 'axios';
 import TermsAndConditions from './TermsAndConditions';
 
 const LoginSignup = ({ onLogin }) => {
@@ -21,16 +20,16 @@ const LoginSignup = ({ onLogin }) => {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [termsDialogOpen, setTermsDialogOpen] = useState(false); // NEW: Terms dialog state
+    const [termsDialogOpen, setTermsDialogOpen] = useState(false);
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
-        setError(''); // Clear errors when switching tabs
+        setError('');
     };
 
     const handleLoginChange = (e) => {
         setLoginForm({ ...loginForm, [e.target.name]: e.target.value });
-        setError(''); // Clear error when user types
+        setError('');
     };
 
     const handleSignupChange = (e) => {
@@ -39,7 +38,7 @@ const LoginSignup = ({ onLogin }) => {
         } else {
             setSignupForm({ ...signupForm, [e.target.name]: e.target.value });
         }
-        setError(''); // Clear error when user types
+        setError('');
     };
 
     const handleLogin = async () => {
@@ -51,25 +50,25 @@ const LoginSignup = ({ onLogin }) => {
         setLoading(true);
         setError('');
 
-        try {
-            const response = await axios.post('http://localhost:3000/login', loginForm);
-            
-            // Store token and user data
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
-            
-            // Update parent component state
-            onLogin(response.data.user);
-            
-            // Navigate to home page
-            navigate('/');
-            
-        } catch (error) {
-            console.error('Login failed:', error);
-            setError(error.response?.data?.message || 'Login failed. Please check your credentials.');
-        } finally {
+        // Simulate API call delay
+        setTimeout(() => {
+            // Mock login validation
+            if (loginForm.email === 'demo@example.com' && loginForm.password === 'password') {
+                const mockUser = {
+                    id: '1',
+                    name: 'Demo User',
+                    email: loginForm.email,
+                    contactNumber: '1234567890',
+                    role: 'user'
+                };
+                
+                onLogin(mockUser);
+                navigate('/');
+            } else {
+                setError('Invalid credentials. Use demo@example.com / password for demo login.');
+            }
             setLoading(false);
-        }
+        }, 1000);
     };
 
     const handleSignup = async () => {
@@ -84,7 +83,6 @@ const LoginSignup = ({ onLogin }) => {
             return;
         }
 
-        // NEW: Check if terms are accepted
         if (!signupForm.termsAccepted) {
             setError('You must accept the Terms and Conditions to register');
             return;
@@ -93,29 +91,22 @@ const LoginSignup = ({ onLogin }) => {
         setLoading(true);
         setError('');
 
-        try {
-            await axios.post('http://localhost:3000/register', signupForm);
-            alert('Registration successful! Please login.');
+        // Simulate API call delay
+        setTimeout(() => {
+            alert('Registration successful! Please login with your credentials.');
             setTabValue(0);
-            // Clear signup form
             setSignupForm({
                 name: '', email: '', contactNumber: '', password: '', confirmPassword: '', termsAccepted: false
             });
-        } catch (error) {
-            console.error('Signup failed:', error);
-            setError(error.response?.data?.message || 'Registration failed. Please try again.');
-        } finally {
             setLoading(false);
-        }
+        }, 1000);
     };
 
-    // NEW: Handle terms dialog open
     const handleTermsLinkClick = (e) => {
         e.preventDefault();
         setTermsDialogOpen(true);
     };
 
-    // NEW: Handle terms acceptance from dialog
     const handleTermsAccept = () => {
         setSignupForm({ ...signupForm, termsAccepted: true });
         setTermsDialogOpen(false);
@@ -136,6 +127,9 @@ const LoginSignup = ({ onLogin }) => {
 
             {tabValue === 0 && (
                 <Box sx={{ mt: 3, textAlign: 'center' }}>
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                        Demo Login: demo@example.com / password
+                    </Alert>
                     <TextField
                         name="email"
                         label="Email"
@@ -219,7 +213,6 @@ const LoginSignup = ({ onLogin }) => {
                         required
                     />
                     
-                    {/* NEW: Terms and Conditions Checkbox */}
                     <FormControlLabel
                         control={
                             <Checkbox
@@ -256,7 +249,6 @@ const LoginSignup = ({ onLogin }) => {
                 </Box>
             )}
 
-            {/* NEW: Terms and Conditions Dialog */}
             <TermsAndConditions
                 open={termsDialogOpen}
                 onClose={() => setTermsDialogOpen(false)}

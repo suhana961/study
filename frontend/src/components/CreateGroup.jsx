@@ -5,7 +5,6 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const CreateGroup = () => {
@@ -20,18 +19,33 @@ const CreateGroup = () => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await axios.post('http://localhost:3000/groups/create', form, {
-                headers: { authorization: token }
-            });
-            alert(response.data.message); // **UPDATED: Show backend message which now includes membership info**
-            navigate('/');
-        } catch (error) {
-            console.error('Error creating group:', error);
-            alert('Failed to create group');
+    const handleSubmit = () => {
+        // Validate form
+        if (!form.title || !form.subject || !form.description) {
+            alert('Please fill in all fields');
+            return;
         }
+
+        // Mock group creation success
+        const mockGroupId = Math.random().toString(36).substr(2, 9);
+        console.log('Mock group created:', {
+            id: mockGroupId,
+            ...form,
+            createdAt: new Date().toISOString(),
+            status: 'pending'
+        });
+        
+        alert('Study group created successfully! It will be reviewed by admin.');
+        
+        // Reset form
+        setForm({
+            title: '',
+            subject: '',
+            description: ''
+        });
+        
+        // Navigate to home
+        navigate('/');
     };
 
     return (

@@ -14,80 +14,94 @@ import Paper from '@mui/material/Paper';
 import Chip from '@mui/material/Chip';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import axios from 'axios';
 
 const AdminDashboard = () => {
     const [tabValue, setTabValue] = useState(0);
-    const [groups, setGroups] = useState([]);
-    const [users, setUsers] = useState([]);
-
-    useEffect(() => {
-        fetchGroups();
-        fetchUsers();
-    }, []);
-
-    const fetchGroups = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:3000/admin/groups', {
-                headers: { authorization: token }
-            });
-            setGroups(response.data);
-        } catch (error) {
-            console.error('Error fetching groups:', error);
+    
+    // Mock data for groups
+    const [groups, setGroups] = useState([
+        {
+            _id: '1',
+            title: 'React Study Group',
+            subject: 'Web Development',
+            creator: { name: 'Alice Johnson' },
+            members: ['1', '2', '3'],
+            status: 'pending'
+        },
+        {
+            _id: '2',
+            title: 'Machine Learning Basics',
+            subject: 'Data Science',
+            creator: { name: 'Bob Smith' },
+            members: ['1', '2'],
+            status: 'approved'
+        },
+        {
+            _id: '3',
+            title: 'Python Programming',
+            subject: 'Programming',
+            creator: { name: 'Carol White' },
+            members: ['1'],
+            status: 'rejected'
         }
+    ]);
+
+    // Mock data for users
+    const [users, setUsers] = useState([
+        {
+            _id: '1',
+            name: 'Alice Johnson',
+            email: 'alice@example.com',
+            contactNumber: '1234567890',
+            isBlocked: false
+        },
+        {
+            _id: '2',
+            name: 'Bob Smith',
+            email: 'bob@example.com',
+            contactNumber: '0987654321',
+            isBlocked: false
+        },
+        {
+            _id: '3',
+            name: 'Carol White',
+            email: 'carol@example.com',
+            contactNumber: '5555555555',
+            isBlocked: true
+        }
+    ]);
+
+    const approveGroup = (groupId) => {
+        setGroups(prevGroups => 
+            prevGroups.map(group => 
+                group._id === groupId 
+                    ? { ...group, status: 'approved' }
+                    : group
+            )
+        );
+        alert('Group approved successfully!');
     };
 
-    const fetchUsers = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:3000/admin/users', {
-                headers: { authorization: token }
-            });
-            setUsers(response.data);
-        } catch (error) {
-            console.error('Error fetching users:', error);
-        }
+    const rejectGroup = (groupId) => {
+        setGroups(prevGroups => 
+            prevGroups.map(group => 
+                group._id === groupId 
+                    ? { ...group, status: 'rejected' }
+                    : group
+            )
+        );
+        alert('Group rejected successfully!');
     };
 
-    const approveGroup = async (groupId) => {
-        try {
-            const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:3000/admin/groups/${groupId}/approve`, {}, {
-                headers: { authorization: token }
-            });
-            fetchGroups();
-            alert('Group approved successfully!');
-        } catch (error) {
-            console.error('Error approving group:', error);
-        }
-    };
-
-    const rejectGroup = async (groupId) => {
-        try {
-            const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:3000/admin/groups/${groupId}/reject`, {}, {
-                headers: { authorization: token }
-            });
-            fetchGroups();
-            alert('Group rejected successfully!');
-        } catch (error) {
-            console.error('Error rejecting group:', error);
-        }
-    };
-
-    const toggleUserBlock = async (userId, isBlocked) => {
-        try {
-            const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:3000/admin/users/${userId}/block`, 
-                { isBlocked: !isBlocked }, 
-                { headers: { authorization: token } }
-            );
-            fetchUsers();
-            alert(`User ${!isBlocked ? 'blocked' : 'unblocked'} successfully!`);
-        } catch (error) {
-            console.error('Error updating user status:', error);
-        }
+    const toggleUserBlock = (userId, isBlocked) => {
+        setUsers(prevUsers => 
+            prevUsers.map(user => 
+                user._id === userId 
+                    ? { ...user, isBlocked: !isBlocked }
+                    : user
+            )
+        );
+        alert(`User ${!isBlocked ? 'blocked' : 'unblocked'} successfully!`);
     };
 
     const getStatusColor = (status) => {

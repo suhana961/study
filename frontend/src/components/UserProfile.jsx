@@ -9,7 +9,6 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
-import axios from 'axios';
 
 const UserProfile = () => {
     const [profile, setProfile] = useState({
@@ -21,63 +20,56 @@ const UserProfile = () => {
     const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
-        fetchProfile();
-        fetchMyGroups();
+        // Mock profile data
+        const mockProfile = {
+            name: 'John Doe',
+            email: 'john.doe@example.com',
+            contactNumber: '1234567890'
+        };
+        setProfile(mockProfile);
+
+        // Mock groups data
+        const mockGroups = [
+            {
+                _id: '1',
+                title: 'Advanced Mathematics Study Group',
+                subject: 'Mathematics',
+                members: ['user1', 'user2', 'user3']
+            },
+            {
+                _id: '2',  
+                title: 'Physics Problem Solving',
+                subject: 'Physics',
+                members: ['user1', 'user4', 'user5', 'user6']
+            },
+            {
+                _id: '3',
+                title: 'Computer Science Fundamentals',
+                subject: 'Computer Science',
+                members: ['user1', 'user7']
+            }
+        ];
+        setMyGroups(mockGroups);
     }, []);
-
-    const fetchProfile = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:3000/profile', {
-                headers: { authorization: token }
-            });
-            setProfile(response.data);
-        } catch (error) {
-            console.error('Error fetching profile:', error);
-        }
-    };
-
-    const fetchMyGroups = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:3000/my-groups', {
-                headers: { authorization: token }
-            });
-            setMyGroups(response.data);
-        } catch (error) {
-            console.error('Error fetching groups:', error);
-        }
-    };
 
     const handleChange = (e) => {
         setProfile({ ...profile, [e.target.name]: e.target.value });
     };
 
     const handleSave = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            await axios.put('http://localhost:3000/profile', profile, {
-                headers: { authorization: token }
-            });
+        // Simulate save operation
+        setTimeout(() => {
             setIsEditing(false);
             alert('Profile updated successfully!');
-        } catch (error) {
-            console.error('Error updating profile:', error);
-            alert('Failed to update profile');
-        }
+        }, 500);
     };
 
     const leaveGroup = async (groupId) => {
-        try {
-            const token = localStorage.getItem('token');
-            await axios.post(`http://localhost:3000/groups/${groupId}/leave`, {}, {
-                headers: { authorization: token }
-            });
-            fetchMyGroups();
+        // Simulate leaving group
+        setTimeout(() => {
+            setMyGroups(prevGroups => prevGroups.filter(group => group._id !== groupId));
             alert('Left group successfully!');
-        } catch (error) {
-            console.error('Error leaving group:', error);
-        }
+        }, 500);
     };
 
     return (

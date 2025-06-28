@@ -7,7 +7,6 @@ import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Alert from '@mui/material/Alert';
-import axios from 'axios';
 
 const EditGroup = () => {
     const { id } = useParams();
@@ -19,72 +18,76 @@ const EditGroup = () => {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [currentUserId] = useState('user1');
 
     useEffect(() => {
         fetchGroupDetails();
     }, [id]);
 
-    const fetchGroupDetails = async () => {
-        try {
-            const response = await axios.get(`http://localhost:3000/groups/${id}`);
-            const group = response.data;
-            
-            // Check if current user is the creator
-            const token = localStorage.getItem('token');
-            if (token) {
-                const userResponse = await axios.get('http://localhost:3000/profile', {
-                    headers: { authorization: token }
-                });
-                
-                if (group.creator._id !== userResponse.data._id) {
-                    setError('You are not authorized to edit this group');
-                    return;
-                }
-            } else {
-                setError('Please login to edit groups');
-                return;
+    const fetchGroupDetails = () => {
+        // Mock groups data
+        const mockGroups = {
+            'group1': {
+                _id: 'group1',
+                title: 'Advanced Mathematics Study Group',
+                subject: 'Mathematics',
+                description: 'Calculus, Linear Algebra, and Statistics study sessions. We meet twice a week to solve complex problems and help each other understand difficult concepts.',
+                creator: { _id: 'user2', name: 'Alice Johnson' }
+            },
+            'group2': {
+                _id: 'group2',
+                title: 'Computer Science Fundamentals',
+                subject: 'Computer Science',
+                description: 'Data Structures, Algorithms, and Programming concepts. Perfect for CS students looking to strengthen their foundation.',
+                creator: { _id: 'user1', name: 'Demo User' }
+            },
+            'group3': {
+                _id: 'group3',
+                title: 'Physics Lab Group',
+                subject: 'Physics',
+                description: 'Experimental physics and lab report discussions. Share your experiments and get help with lab reports.',
+                creator: { _id: 'user5', name: 'David Wilson' }
+            },
+            'group4': {
+                _id: 'group4',
+                title: 'English Literature Circle',
+                subject: 'English',
+                description: 'Classic and modern literature analysis and discussion. Dive deep into literary works and share interpretations.',
+                creator: { _id: 'user7', name: 'Frank Miller' }
             }
-            
-            setForm({
-                title: group.title,
-                subject: group.subject,
-                description: group.description
-            });
+        };
+
+        const group = mockGroups[id];
+        
+        if (!group) {
+            setError('Group not found');
             setLoading(false);
-        } catch (error) {
-            console.error('Error fetching group details:', error);
-            setError('Failed to load group details');
-            setLoading(false);
+            return;
         }
+
+        // Check if current user is the creator
+        if (group.creator._id !== currentUserId) {
+            setError('You are not authorized to edit this group');
+            setLoading(false);
+            return;
+        }
+        
+        setForm({
+            title: group.title,
+            subject: group.subject,
+            description: group.description
+        });
+        setLoading(false);
     };
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Please login to edit groups');
-                navigate('/login');
-                return;
-            }
-
-            await axios.put(`http://localhost:3000/groups/${id}`, form, {
-                headers: { authorization: token }
-            });
-            
-            alert('Group updated successfully!');
-            navigate(`/group/${id}`);
-        } catch (error) {
-            console.error('Error updating group:', error);
-            if (error.response?.status === 403) {
-                alert('You are not authorized to edit this group');
-            } else {
-                alert('Failed to update group. Please try again.');
-            }
-        }
+    const handleSubmit = () => {
+        // Simulate successful update
+        alert('Group updated successfully!');
+        navigate(`/group/${id}`);
     };
 
     const handleCancel = () => {

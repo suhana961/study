@@ -5,95 +5,101 @@ import CardActions from '@mui/material/CardActions';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
     const [groups, setGroups] = useState([]);
     const [userGroups, setUserGroups] = useState([]);
-    const [currentUserId, setCurrentUserId] = useState(null);
+    const [currentUserId] = useState('user1');
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetchGroups();
-        fetchUserGroups();
-        getCurrentUser();
+        // Mock groups data
+        const mockGroups = [
+            {
+                _id: 'group1',
+                title: 'Advanced Mathematics Study Group',
+                subject: 'Mathematics', 
+                description: 'Calculus, Linear Algebra, and Statistics study sessions',
+                members: [
+                    { _id: 'user1', name: 'Demo User' },
+                    { _id: 'user2', name: 'Alice Johnson' },
+                    { _id: 'user3', name: 'Bob Smith' }
+                ],
+                creator: { _id: 'user2', name: 'Alice Johnson' }
+            },
+            {
+                _id: 'group2',
+                title: 'Computer Science Fundamentals',
+                subject: 'Computer Science',
+                description: 'Data Structures, Algorithms, and Programming concepts',
+                members: [
+                    { _id: 'user1', name: 'Demo User' },
+                    { _id: 'user4', name: 'Carol Davis' }
+                ],
+                creator: { _id: 'user1', name: 'Demo User' }
+            },
+            {
+                _id: 'group3',
+                title: 'Physics Lab Group',
+                subject: 'Physics',
+                description: 'Experimental physics and lab report discussions',
+                members: [
+                    { _id: 'user5', name: 'David Wilson' },
+                    { _id: 'user6', name: 'Emma Brown' }
+                ],
+                creator: { _id: 'user5', name: 'David Wilson' }
+            },
+            {
+                _id: 'group4',
+                title: 'English Literature Circle',
+                subject: 'English',
+                description: 'Classic and modern literature analysis and discussion',
+                members: [
+                    { _id: 'user7', name: 'Frank Miller' }
+                ],
+                creator: { _id: 'user7', name: 'Frank Miller' }
+            }
+        ];
+        
+        setGroups(mockGroups);
+        // User is already in groups 1 and 2
+        setUserGroups(['group1', 'group2']);
     }, []);
 
-    const fetchGroups = async () => {
-        try {
-            const response = await axios.get('http://localhost:3000/groups');
-            setGroups(response.data);
-        } catch (error) {
-            console.error('Error fetching groups:', error);
-        }
-    };
-
-    const fetchUserGroups = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (token) {
-                const response = await axios.get('http://localhost:3000/my-groups', {
-                    headers: { authorization: token }
-                });
-                setUserGroups(response.data.map(group => group._id));
-            }
-        } catch (error) {
-            console.error('Error fetching user groups:', error);
-        }
-    };
-
-    const getCurrentUser = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (token) {
-                const response = await axios.get('http://localhost:3000/profile', {
-                    headers: { authorization: token }
-                });
-                setCurrentUserId(response.data._id);
-            }
-        } catch (error) {
-            console.error('Error fetching user profile:', error);
-        }
-    };
-
-    const joinGroup = async (groupId) => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Please login to join a group');
-                navigate('/login');
-                return;
-            }
-
-            await axios.post(`http://localhost:3000/groups/${groupId}/join`, {}, {
-                headers: { authorization: token }
-            });
-            
+    const joinGroup = (groupId) => {
+        if (!userGroups.includes(groupId)) {
+            setUserGroups([...userGroups, groupId]);
+            // Update the groups to reflect new member count
+            setGroups(prevGroups => 
+                prevGroups.map(group => 
+                    group._id === groupId 
+                        ? {
+                            ...group,
+                            members: [...group.members, { _id: currentUserId, name: 'Demo User' }]
+                        }
+                        : group
+                )
+            );
             alert('Joined group successfully!');
-            // Refresh the data to update button states
-            fetchGroups();
-            fetchUserGroups();
-        } catch (error) {
-            console.error('Failed to join group:', error);
-            alert('Failed to join group. Please try again.');
         }
     };
 
-    const leaveGroup = async (groupId) => {
-        try {
-            const token = localStorage.getItem('token');
-            await axios.post(`http://localhost:3000/groups/${groupId}/leave`, {}, {
-                headers: { authorization: token }
-            });
-            
+    const leaveGroup = (groupId) => {
+        if (userGroups.includes(groupId)) {
+            setUserGroups(userGroups.filter(id => id !== groupId));
+            // Update the groups to reflect reduced member count
+            setGroups(prevGroups => 
+                prevGroups.map(group => 
+                    group._id === groupId 
+                        ? {
+                            ...group,
+                            members: group.members.filter(member => member._id !== currentUserId)
+                        }
+                        : group
+                )
+            );
             alert('Left group successfully!');
-            // Refresh the data to update button states
-            fetchGroups();
-            fetchUserGroups();
-        } catch (error) {
-            console.error('Failed to leave group:', error);
-            alert('Failed to leave group. Please try again.');
         }
     };
 
@@ -102,7 +108,7 @@ const Home = () => {
     };
 
     const isUserLoggedIn = () => {
-        return localStorage.getItem('token') !== null;
+        return true; // Always logged in for demo
     };
 
     return (

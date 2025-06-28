@@ -16,7 +16,6 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContentText from '@mui/material/DialogContentText';
-import axios from 'axios';
 
 const GroupDetails = () => {
     const { id } = useParams();
@@ -25,93 +24,136 @@ const GroupDetails = () => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [file, setFile] = useState(null);
-    const [currentUserId, setCurrentUserId] = useState(null);
+    const [currentUserId] = useState('user1');
     const [isUserInGroup, setIsUserInGroup] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     useEffect(() => {
         fetchGroupDetails();
         fetchMessages();
-        getCurrentUser();
     }, [id]);
 
-    const fetchGroupDetails = async () => {
-        try {
-            const response = await axios.get(`http://localhost:3000/groups/${id}`);
-            setGroup(response.data);
-            
+    const fetchGroupDetails = () => {
+        // Mock groups data
+        const mockGroups = {
+            'group1': {
+                _id: 'group1',
+                title: 'Advanced Mathematics Study Group',
+                subject: 'Mathematics',
+                description: 'Calculus, Linear Algebra, and Statistics study sessions. We meet twice a week to solve complex problems and help each other understand difficult concepts.',
+                members: [
+                    { _id: 'user1', name: 'Demo User' },
+                    { _id: 'user2', name: 'Alice Johnson' },
+                    { _id: 'user3', name: 'Bob Smith' }
+                ],
+                creator: { _id: 'user2', name: 'Alice Johnson' }
+            },
+            'group2': {
+                _id: 'group2',
+                title: 'Computer Science Fundamentals',
+                subject: 'Computer Science',
+                description: 'Data Structures, Algorithms, and Programming concepts. Perfect for CS students looking to strengthen their foundation.',
+                members: [
+                    { _id: 'user1', name: 'Demo User' },
+                    { _id: 'user4', name: 'Carol Davis' }
+                ],
+                creator: { _id: 'user1', name: 'Demo User' }
+            },
+            'group3': {
+                _id: 'group3',
+                title: 'Physics Lab Group',
+                subject: 'Physics',
+                description: 'Experimental physics and lab report discussions. Share your experiments and get help with lab reports.',
+                members: [
+                    { _id: 'user5', name: 'David Wilson' },
+                    { _id: 'user6', name: 'Emma Brown' }
+                ],
+                creator: { _id: 'user5', name: 'David Wilson' }
+            },
+            'group4': {
+                _id: 'group4',
+                title: 'English Literature Circle',
+                subject: 'English',
+                description: 'Classic and modern literature analysis and discussion. Dive deep into literary works and share interpretations.',
+                members: [
+                    { _id: 'user7', name: 'Frank Miller' }
+                ],
+                creator: { _id: 'user7', name: 'Frank Miller' }
+            }
+        };
+
+        const selectedGroup = mockGroups[id];
+        if (selectedGroup) {
+            setGroup(selectedGroup);
             // Check if current user is in this group
-            const token = localStorage.getItem('token');
-            if (token) {
-                const userResponse = await axios.get('http://localhost:3000/profile', {
-                    headers: { authorization: token }
-                });
-                const userId = userResponse.data._id;
-                setIsUserInGroup(response.data.members.some(member => member._id === userId));
-            }
-        } catch (error) {
-            console.error('Error fetching group details:', error);
+            setIsUserInGroup(selectedGroup.members.some(member => member._id === currentUserId));
         }
     };
 
-    const fetchMessages = async () => {
-        try {
-            const response = await axios.get(`http://localhost:3000/groups/${id}/messages`);
-            setMessages(response.data);
-        } catch (error) {
-            console.error('Error fetching messages:', error);
-        }
+    const fetchMessages = () => {
+        // Mock messages data
+        const mockMessages = {
+            'group1': [
+                {
+                    _id: 'msg1',
+                    message: 'Hey everyone! I uploaded the calculus study notes from last week.',
+                    sender: { _id: 'user2', name: 'Alice Johnson' },
+                    fileUrl: 'calculus-notes.pdf',
+                    createdAt: new Date('2025-06-25T10:30:00Z')
+                },
+                {
+                    _id: 'msg2',
+                    message: 'Thanks Alice! Can someone explain the integration by parts method?',
+                    sender: { _id: 'user3', name: 'Bob Smith' },
+                    createdAt: new Date('2025-06-25T14:15:00Z')
+                },
+                {
+                    _id: 'msg3',
+                    message: 'Sure! Integration by parts uses the formula: ∫u dv = uv - ∫v du',
+                    sender: { _id: 'user1', name: 'Demo User' },
+                    createdAt: new Date('2025-06-25T16:45:00Z')
+                }
+            ],
+            'group2': [
+                {
+                    _id: 'msg4',
+                    message: 'Working on binary trees today. Anyone want to practice together?',
+                    sender: { _id: 'user1', name: 'Demo User' },
+                    createdAt: new Date('2025-06-26T09:00:00Z')
+                },
+                {
+                    _id: 'msg5',
+                    message: 'I\'m in! Let\'s meet at the library.',
+                    sender: { _id: 'user4', name: 'Carol Davis' },
+                    createdAt: new Date('2025-06-26T09:15:00Z')
+                }
+            ]
+        };
+
+        setMessages(mockMessages[id] || []);
     };
 
-    const getCurrentUser = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (token) {
-                const response = await axios.get('http://localhost:3000/profile', {
-                    headers: { authorization: token }
-                });
-                setCurrentUserId(response.data._id);
-            }
-        } catch (error) {
-            console.error('Error fetching user profile:', error);
-        }
-    };
-
-    const joinGroup = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Please login to join a group');
-                navigate('/login');
-                return;
-            }
-
-            await axios.post(`http://localhost:3000/groups/${id}/join`, {}, {
-                headers: { authorization: token }
-            });
-            
-            alert('Joined group successfully!');
+    const joinGroup = () => {
+        if (!isUserInGroup) {
+            const updatedGroup = {
+                ...group,
+                members: [...group.members, { _id: currentUserId, name: 'Demo User' }]
+            };
+            setGroup(updatedGroup);
             setIsUserInGroup(true);
-            fetchGroupDetails(); // Refresh group data
-        } catch (error) {
-            console.error('Failed to join group:', error);
-            alert('Failed to join group. Please try again.');
+            alert('Joined group successfully!');
         }
     };
 
-    const leaveGroup = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            await axios.post(`http://localhost:3000/groups/${id}/leave`, {}, {
-                headers: { authorization: token }
-            });
-            
-            alert('Left group successfully!');
+    const leaveGroup = () => {
+        if (isUserInGroup) {
+            const updatedGroup = {
+                ...group,
+                members: group.members.filter(member => member._id !== currentUserId)
+            };
+            setGroup(updatedGroup);
             setIsUserInGroup(false);
-            fetchGroupDetails(); // Refresh group data
-        } catch (error) {
-            console.error('Failed to leave group:', error);
-            alert('Failed to leave group. Please try again.');
+            alert('Left group successfully!');
         }
     };
 
@@ -119,64 +161,31 @@ const GroupDetails = () => {
         navigate(`/edit-group/${id}`);
     };
 
-    const handleDeleteGroup = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Please login to delete groups');
-                navigate('/login');
-                return;
-            }
-
-            await axios.delete(`http://localhost:3000/groups/${id}`, {
-                headers: { authorization: token }
-            });
-            
-            alert('Group deleted successfully!');
-            navigate('/');
-        } catch (error) {
-            console.error('Failed to delete group:', error);
-            if (error.response?.status === 403) {
-                alert('You are not authorized to delete this group');
-            } else {
-                alert('Failed to delete group. Please try again.');
-            }
-        }
+    const handleDeleteGroup = () => {
+        alert('Group deleted successfully!');
+        navigate('/');
         setDeleteDialogOpen(false);
     };
 
-    const sendMessage = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Please login to send messages');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('message', newMessage);
-            if (file) {
-                formData.append('file', file);
-            }
-
-            await axios.post(`http://localhost:3000/groups/${id}/messages`, formData, {
-                headers: { 
-                    authorization: token,
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-
+    const sendMessage = () => {
+        if (newMessage.trim()) {
+            const newMsg = {
+                _id: `msg${Date.now()}`,
+                message: newMessage,
+                sender: { _id: currentUserId, name: 'Demo User' },
+                fileUrl: file ? file.name : null,
+                createdAt: new Date()
+            };
+            
+            setMessages([...messages, newMsg]);
             setNewMessage('');
             setFile(null);
-            fetchMessages();
-        } catch (error) {
-            console.error('Error sending message:', error);
-            alert('Failed to send message. Please try again.');
+            alert('Message sent successfully!');
         }
     };
 
     const isUserLoggedIn = () => {
-        return localStorage.getItem('token') !== null;
+        return true; // Always logged in for demo
     };
 
     const isGroupCreator = () => {
@@ -273,7 +282,7 @@ const GroupDetails = () => {
                                                     </Typography>
                                                     {message.fileUrl && (
                                                         <Typography variant="caption" color="primary">
-                                                            📎 File attached
+                                                            📎 {message.fileUrl}
                                                         </Typography>
                                                     )}
                                                     <Typography variant="caption" display="block">

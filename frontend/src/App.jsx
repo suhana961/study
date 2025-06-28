@@ -11,22 +11,22 @@ import EditGroup from './components/EditGroup';
 import AdminDashboard from './components/AdminDashboard';
 
 const App = () => {
-    const [user, setUser] = useState(null);
-
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
-    }, []);
+    // Mock user data for standalone frontend
+    const [user, setUser] = useState({
+        _id: '1',
+        name: 'John Doe',
+        email: 'john@example.com',
+        contactNumber: '1234567890',
+        isAdmin: true
+    });
 
     const handleLogin = (userData) => {
+        // Mock login - just set the user data
         setUser(userData);
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        // Mock logout - reset to default user or null
         setUser(null);
     };
 
