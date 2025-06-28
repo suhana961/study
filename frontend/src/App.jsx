@@ -11,36 +11,47 @@ import EditGroup from './components/EditGroup';
 import AdminDashboard from './components/AdminDashboard';
 
 const App = () => {
-    // Mock user data for standalone frontend
+    // Mock user data for standalone frontend - starts as logged in user
     const [user, setUser] = useState({
-        _id: '1',
-        name: 'John Doe',
-        email: 'john@example.com',
+        _id: 'user1',
+        name: 'Demo User',
+        email: 'demo@example.com',
         contactNumber: '1234567890',
-        isAdmin: true
+        role: 'user', // Changed from isAdmin to role for consistency
+        isAdmin: false
     });
 
     const handleLogin = (userData) => {
-        // Mock login - just set the user data
-        setUser(userData);
+        // Mock login - set user data based on form input or use default
+        const mockUser = {
+            _id: userData?.email === 'admin@example.com' ? 'admin1' : 'user1',
+            name: userData?.name || 'Demo User',
+            email: userData?.email || 'demo@example.com',
+            contactNumber: userData?.contactNumber || '1234567890',
+            role: userData?.email === 'admin@example.com' ? 'admin' : 'user',
+            isAdmin: userData?.email === 'admin@example.com'
+        };
+        setUser(mockUser);
+        console.log('User logged in:', mockUser);
     };
 
     const handleLogout = () => {
-        // Mock logout - reset to default user or null
+        // Mock logout - clear user data
         setUser(null);
+        console.log('User logged out');
     };
 
     return (
         <div>
             <Navbar user={user} onLogout={handleLogout} />
             <Routes>
-                <Route path='/' element={<Home />} />
+                <Route path='/' element={<Home user={user} />} />
                 <Route path='/login' element={<LoginSignup onLogin={handleLogin} />} />
-                <Route path='/group/:id' element={<GroupDetails />} />
-                <Route path='/profile' element={<UserProfile />} />
-                <Route path='/create-group' element={<CreateGroup />} />
-                <Route path='/edit-group/:id' element={<EditGroup />} />
-                <Route path='/admin' element={<AdminDashboard />} />
+                <Route path='/group/:id' element={<GroupDetails user={user} />} />
+                <Route path='/profile' element={<UserProfile user={user} />} />
+                <Route path='/create-group' element={<CreateGroup user={user} />} />
+                <Route path='/edit-group/:id' element={<EditGroup user={user} />} />
+                <Route path='/admin' element={<AdminDashboard user={user} />} />
             </Routes>
         </div>
     );
