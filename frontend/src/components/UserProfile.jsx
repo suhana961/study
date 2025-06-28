@@ -9,8 +9,11 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
+import Alert from '@mui/material/Alert';
+import { useNavigate } from 'react-router-dom';
 
-const UserProfile = () => {
+const UserProfile = ({ user, groups = [], onLeaveGroup }) => {
+    const navigate = useNavigate();
     const [profile, setProfile] = useState({
         name: '',
         email: '',
@@ -18,62 +21,108 @@ const UserProfile = () => {
     });
     const [myGroups, setMyGroups] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
+    const [message, setMessage] = useState('');
 
     useEffect(() => {
-        // Mock profile data
-        const mockProfile = {
-            name: 'John Doe',
-            email: 'john.doe@example.com',
-            contactNumber: '1234567890'
-        };
-        setProfile(mockProfile);
+        // Redirect to login if not authenticated
+        if (!user) {
+            navigate('/login');
+            return;
+        }
 
-        // Mock groups data
-        const mockGroups = [
-            {
-                _id: '1',
-                title: 'Advanced Mathematics Study Group',
-                subject: 'Mathematics',
-                members: ['user1', 'user2', 'user3']
-            },
-            {
-                _id: '2',  
-                title: 'Physics Problem Solving',
-                subject: 'Physics',
-                members: ['user1', 'user4', 'user5', 'user6']
-            },
-            {
-                _id: '3',
-                title: 'Computer Science Fundamentals',
-                subject: 'Computer Science',
-                members: ['user1', 'user7']
-            }
-        ];
-        setMyGroups(mockGroups);
-    }, []);
+        // Set profile data from user prop
+        setProfile({
+            name: user.name || '',
+            email: user.email || '',
+            contactNumber: user.contactNumber || ''
+        });
+
+        // Filter groups where user is a member
+        const userGroups = groups.filter(group => 
+            group.members && group.members.includes(user._id)
+        );
+        setMyGroups(userGroups);
+    }, [user, groups, navigate]);
 
     const handleChange = (e) => {
         setProfile({ ...profile, [e.target.name]: e.target.value });
     };
 
-    const handleSave = async () => {
-        // Simulate save operation
+    const handleSave = () => {
+        // Simulate save operation with validation
+        if (!profile.name.trim()) {
+            setMessage('Name is required');
+            return;
+        }
+        
+        if (!profile.email.trim()) {
+            setMessage('Email is required');
+            return;
+        }
+
+        // Simulate API delay
         setTimeout(() => {
             setIsEditing(false);
-            alert('Profile updated successfully!');
+            setMessage('Profile updated successfully!');
+            console.log('Mock profile update:', profile);
+            
+            // Clear success message after 3 seconds
+            setTimeout(() => setMessage(''), 3000);
         }, 500);
     };
 
-    const leaveGroup = async (groupId) => {
-        // Simulate leaving group
-        setTimeout(() => {
-            setMyGroups(prevGroups => prevGroups.filter(group => group._id !== groupId));
-            alert('Left group successfully!');
-        }, 500);
+    const handleCancel = () => {
+        // Reset to original user data
+        setProfile({
+            name: user.name || '',
+            email: user.email || '',
+            contactNumber: user.contactNumber || ''
+        });
+        setIsEditing(false);
+        setMessage('');
     };
+
+    const leaveGroup = (groupId) => {
+        // Confirm before leaving
+        if (window.confirm('Are you sure you want to leave this group?')) {
+            // Update local state immediately for better UX
+            setMyGroups(prevGroups => prevGroups.filter(group => group._id !== groupId));
+            
+            // Call parent handler if provided
+            if (onLeaveGroup) {
+                onLeaveGroup(groupId);
+            }
+            
+            setMessage('Left group successfully!');
+            
+            // Clear message after 3 seconds
+            setTimeout(() => setMessage(''), 3000);
+        }
+    };
+
+    // Show loading or redirect message if no user
+    if (!user) {
+        return (
+            <Box sx={{ padding: 3 }}>
+                <Typography variant="h6">
+                    Please log in to view your profile.
+                </Typography>
+            </Box>
+        );
+    }
 
     return (
-        <Box sx={{ padding: 3 }}>
+        <Box sx={{ padding: 3, maxWidth: 800, mx: 'auto' }}>
+            {message && (
+                <Alert 
+                    severity={message.includes('successfully') ? 'success' : 'error'} 
+                    sx={{ mb: 2 }}
+                    onClose={() => setMessage('')}
+                >
+                    {message}
+                </Alert>
+            )}
+
             <Card sx={{ mb: 3 }}>
                 <CardContent>
                     <Typography variant="h5" gutterBottom>
@@ -88,16 +137,19 @@ const UserProfile = () => {
                         onChange={handleChange}
                         margin="normal"
                         disabled={!isEditing}
+                        required
                     />
                     
                     <TextField
                         fullWidth
                         name="email"
                         label="Email"
+                        type="email"
                         value={profile.email}
                         onChange={handleChange}
                         margin="normal"
                         disabled={!isEditing}
+                        required
                     />
                     
                     <TextField
@@ -118,11 +170,11 @@ const UserProfile = () => {
                                     onClick={handleSave}
                                     sx={{ mr: 2 }}
                                 >
-                                    Save
+                                    Save Changes
                                 </Button>
                                 <Button 
                                     variant="outlined" 
-                                    onClick={() => setIsEditing(false)}
+                                    onClick={handleCancel}
                                 >
                                     Cancel
                                 </Button>
@@ -142,35 +194,78 @@ const UserProfile = () => {
             <Card>
                 <CardContent>
                     <Typography variant="h6" gutterBottom>
-                        My Study Groups
+                        My Study Groups ({myGroups.length})
                     </Typography>
                     
-                    <List>
-                        {myGroups.map((group) => (
-                            <div key={group._id}>
-                                <ListItem>
-                                    <ListItemText
-                                        primary={group.title}
-                                        secondary={`Subject: ${group.subject} | Members: ${group.members?.length || 0}`}
-                                    />
-                                    <Button 
-                                        variant="outlined" 
-                                        color="error" 
-                                        size="small"
-                                        onClick={() => leaveGroup(group._id)}
+                    {myGroups.length > 0 ? (
+                        <List>
+                            {myGroups.map((group) => (
+                                <div key={group._id}>
+                                    <ListItem
+                                        sx={{ 
+                                            display: 'flex', 
+                                            justifyContent: 'space-between',
+                                            alignItems: 'flex-start'
+                                        }}
                                     >
-                                        Leave
-                                    </Button>
-                                </ListItem>
-                                <Divider />
-                            </div>
-                        ))}
-                        {myGroups.length === 0 && (
-                            <Typography variant="body2" color="text.secondary">
-                                You haven't joined any groups yet.
+                                        <ListItemText
+                                            primary={group.title}
+                                            secondary={
+                                                <>
+                                                    <Typography component="span" variant="body2">
+                                                        Subject: {group.subject}
+                                                    </Typography>
+                                                    <br />
+                                                    <Typography component="span" variant="body2">
+                                                        Members: {group.members?.length || 0}/{group.maxMembers || 'No limit'}
+                                                    </Typography>
+                                                    {group.location && (
+                                                        <>
+                                                            <br />
+                                                            <Typography component="span" variant="body2">
+                                                                Location: {group.location}
+                                                            </Typography>
+                                                        </>
+                                                    )}
+                                                </>
+                                            }
+                                        />
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                            <Button 
+                                                variant="outlined" 
+                                                size="small"
+                                                onClick={() => navigate(`/group/${group._id}`)}
+                                            >
+                                                View Details
+                                            </Button>
+                                            <Button 
+                                                variant="outlined" 
+                                                color="error" 
+                                                size="small"
+                                                onClick={() => leaveGroup(group._id)}
+                                            >
+                                                Leave Group
+                                            </Button>
+                                        </Box>
+                                    </ListItem>
+                                    <Divider />
+                                </div>
+                            ))}
+                        </List>
+                    ) : (
+                        <Box sx={{ textAlign: 'center', py: 4 }}>
+                            <Typography variant="body1" color="text.secondary" gutterBottom>
+                                You haven't joined any study groups yet.
                             </Typography>
-                        )}
-                    </List>
+                            <Button 
+                                variant="contained" 
+                                onClick={() => navigate('/')}
+                                sx={{ mt: 2 }}
+                            >
+                                Browse Study Groups
+                            </Button>
+                        </Box>
+                    )}
                 </CardContent>
             </Card>
         </Box>
