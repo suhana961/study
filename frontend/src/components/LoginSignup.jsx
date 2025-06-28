@@ -9,6 +9,7 @@ import Alert from '@mui/material/Alert';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Link from '@mui/material/Link';
+import Typography from '@mui/material/Typography';
 import TermsAndConditions from './TermsAndConditions';
 
 const LoginSignup = ({ onLogin }) => {
@@ -21,6 +22,13 @@ const LoginSignup = ({ onLogin }) => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [termsDialogOpen, setTermsDialogOpen] = useState(false);
+
+    // Mock user accounts for demo
+    const mockUsers = [
+        { email: 'demo@example.com', password: 'password', name: 'Demo User', role: 'user' },
+        { email: 'admin@example.com', password: 'admin123', name: 'Admin User', role: 'admin' },
+        { email: 'student@example.com', password: 'student123', name: 'Student User', role: 'user' }
+    ];
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
@@ -41,7 +49,7 @@ const LoginSignup = ({ onLogin }) => {
         setError('');
     };
 
-    const handleLogin = async () => {
+    const handleLogin = () => {
         if (!loginForm.email || !loginForm.password) {
             setError('Please fill in all fields');
             return;
@@ -50,28 +58,33 @@ const LoginSignup = ({ onLogin }) => {
         setLoading(true);
         setError('');
 
-        // Simulate API call delay
+        // Simulate network delay
         setTimeout(() => {
-            // Mock login validation
-            if (loginForm.email === 'demo@example.com' && loginForm.password === 'password') {
+            // Check against mock users
+            const foundUser = mockUsers.find(
+                user => user.email === loginForm.email && user.password === loginForm.password
+            );
+
+            if (foundUser) {
                 const mockUser = {
-                    id: '1',
-                    name: 'Demo User',
-                    email: loginForm.email,
+                    _id: foundUser.role === 'admin' ? 'admin1' : 'user1',
+                    name: foundUser.name,
+                    email: foundUser.email,
                     contactNumber: '1234567890',
-                    role: 'user'
+                    role: foundUser.role,
+                    isAdmin: foundUser.role === 'admin'
                 };
                 
                 onLogin(mockUser);
                 navigate('/');
             } else {
-                setError('Invalid credentials. Use demo@example.com / password for demo login.');
+                setError('Invalid credentials. Try: demo@example.com/password or admin@example.com/admin123');
             }
             setLoading(false);
         }, 1000);
     };
 
-    const handleSignup = async () => {
+    const handleSignup = () => {
         if (!signupForm.name || !signupForm.email || !signupForm.contactNumber || 
             !signupForm.password || !signupForm.confirmPassword) {
             setError('Please fill in all fields');
@@ -83,17 +96,39 @@ const LoginSignup = ({ onLogin }) => {
             return;
         }
 
+        if (signupForm.password.length < 6) {
+            setError('Password must be at least 6 characters long');
+            return;
+        }
+
         if (!signupForm.termsAccepted) {
             setError('You must accept the Terms and Conditions to register');
+            return;
+        }
+
+        // Check if email already exists
+        const emailExists = mockUsers.some(user => user.email === signupForm.email);
+        if (emailExists) {
+            setError('Email already registered. Please use a different email.');
             return;
         }
 
         setLoading(true);
         setError('');
 
-        // Simulate API call delay
+        // Simulate network delay
         setTimeout(() => {
-            alert('Registration successful! Please login with your credentials.');
+            alert('Registration successful! You can now login with your credentials.');
+            
+            // Add new user to mock users (in a real app, this would be handled by backend)
+            mockUsers.push({
+                email: signupForm.email,
+                password: signupForm.password,
+                name: signupForm.name,
+                role: 'user'
+            });
+            
+            // Switch to login tab and clear form
             setTabValue(0);
             setSignupForm({
                 name: '', email: '', contactNumber: '', password: '', confirmPassword: '', termsAccepted: false
@@ -113,7 +148,11 @@ const LoginSignup = ({ onLogin }) => {
     };
 
     return (
-        <Box sx={{ width: '100%', maxWidth: 400, margin: 'auto', mt: 4 }}>
+        <Box sx={{ width: '100%', maxWidth: 450, margin: 'auto', mt: 4, p: 2 }}>
+            <Typography variant="h4" align="center" gutterBottom>
+                Welcome to Study Group Finder
+            </Typography>
+            
             <Tabs value={tabValue} onChange={handleTabChange} centered>
                 <Tab label="Login" />
                 <Tab label="Sign Up" />
@@ -126,10 +165,13 @@ const LoginSignup = ({ onLogin }) => {
             )}
 
             {tabValue === 0 && (
-                <Box sx={{ mt: 3, textAlign: 'center' }}>
+                <Box sx={{ mt: 3 }}>
                     <Alert severity="info" sx={{ mb: 2 }}>
-                        Demo Login: demo@example.com / password
+                        <strong>Demo Accounts:</strong><br/>
+                        User: demo@example.com / password<br/>
+                        Admin: admin@example.com / admin123
                     </Alert>
+                    
                     <TextField
                         name="email"
                         label="Email"
@@ -139,6 +181,7 @@ const LoginSignup = ({ onLogin }) => {
                         fullWidth
                         margin="normal"
                         required
+                        variant="outlined"
                     />
                     <TextField
                         name="password"
@@ -149,12 +192,14 @@ const LoginSignup = ({ onLogin }) => {
                         fullWidth
                         margin="normal"
                         required
+                        variant="outlined"
                     />
                     <Button 
                         variant="contained" 
                         onClick={handleLogin} 
                         fullWidth 
-                        sx={{ mt: 2 }}
+                        size="large"
+                        sx={{ mt: 3, mb: 2 }}
                         disabled={loading}
                     >
                         {loading ? 'Logging in...' : 'Login'}
@@ -163,15 +208,16 @@ const LoginSignup = ({ onLogin }) => {
             )}
 
             {tabValue === 1 && (
-                <Box sx={{ mt: 3, textAlign: 'center' }}>
+                <Box sx={{ mt: 3 }}>
                     <TextField
                         name="name"
-                        label="Name"
+                        label="Full Name"
                         value={signupForm.name}
                         onChange={handleSignupChange}
                         fullWidth
                         margin="normal"
                         required
+                        variant="outlined"
                     />
                     <TextField
                         name="email"
@@ -182,6 +228,7 @@ const LoginSignup = ({ onLogin }) => {
                         fullWidth
                         margin="normal"
                         required
+                        variant="outlined"
                     />
                     <TextField
                         name="contactNumber"
@@ -191,6 +238,7 @@ const LoginSignup = ({ onLogin }) => {
                         fullWidth
                         margin="normal"
                         required
+                        variant="outlined"
                     />
                     <TextField
                         name="password"
@@ -201,6 +249,8 @@ const LoginSignup = ({ onLogin }) => {
                         fullWidth
                         margin="normal"
                         required
+                        variant="outlined"
+                        helperText="Minimum 6 characters"
                     />
                     <TextField
                         name="confirmPassword"
@@ -211,6 +261,7 @@ const LoginSignup = ({ onLogin }) => {
                         fullWidth
                         margin="normal"
                         required
+                        variant="outlined"
                     />
                     
                     <FormControlLabel
@@ -234,17 +285,18 @@ const LoginSignup = ({ onLogin }) => {
                                 </Link>
                             </span>
                         }
-                        sx={{ mt: 2, mb: 2, textAlign: 'left' }}
+                        sx={{ mt: 2, mb: 2 }}
                     />
                     
                     <Button 
                         variant="contained" 
                         onClick={handleSignup} 
                         fullWidth 
-                        sx={{ mt: 2 }}
+                        size="large"
+                        sx={{ mt: 2, mb: 2 }}
                         disabled={loading}
                     >
-                        {loading ? 'Signing up...' : 'Sign Up'}
+                        {loading ? 'Creating Account...' : 'Sign Up'}
                     </Button>
                 </Box>
             )}

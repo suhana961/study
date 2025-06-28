@@ -8,6 +8,7 @@ import IconButton from '@mui/material/IconButton';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import Badge from '@mui/material/Badge';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Navbar = ({ user, onLogout }) => {
@@ -28,22 +29,27 @@ const Navbar = ({ user, onLogout }) => {
         navigate('/');
     };
 
-    // NEW: Handle logo/title click to navigate to home
     const handleLogoClick = () => {
         navigate('/');
     };
 
+    const handleProfileClick = () => {
+        navigate('/profile');
+        handleClose();
+    };
+
     return (
         <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="static">
+            <AppBar position="static" elevation={2}>
                 <Toolbar>
-                    {/* UPDATED: Made logo/title clickable */}
                     <Typography 
                         variant="h6" 
                         component="div" 
                         sx={{ 
                             flexGrow: 1, 
                             cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
                             '&:hover': {
                                 opacity: 0.8
                             }
@@ -54,42 +60,108 @@ const Navbar = ({ user, onLogout }) => {
                     </Typography>
                     
                     <Link to='/' style={{ textDecoration: 'none' }}>
-                        <Button color="inherit" style={{ color: "white" }}>Home</Button>
+                        <Button 
+                            color="inherit" 
+                            sx={{ 
+                                color: "white",
+                                '&:hover': {
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            }}
+                        >
+                            Home
+                        </Button>
                     </Link>
                     
                     {user ? (
                         <>
                             <Link to='/create-group' style={{ textDecoration: 'none' }}>
-                                <Button color="inherit" style={{ color: "white" }}>Create Group</Button>
+                                <Button 
+                                    color="inherit" 
+                                    sx={{ 
+                                        color: "white",
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                                        }
+                                    }}
+                                >
+                                    Create Group
+                                </Button>
                             </Link>
                             
-                            {user.role === 'admin' && (
+                            {(user.role === 'admin' || user.isAdmin) && (
                                 <Link to='/admin' style={{ textDecoration: 'none' }}>
-                                    <Button color="inherit" style={{ color: "white" }}>Admin</Button>
+                                    <Button 
+                                        color="inherit" 
+                                        sx={{ 
+                                            color: "white",
+                                            backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(255, 193, 7, 0.3)'
+                                            }
+                                        }}
+                                    >
+                                        Admin Dashboard
+                                    </Button>
                                 </Link>
                             )}
                             
-                            <IconButton
-                                size="large"
-                                onClick={handleMenu}
-                                color="inherit"
-                            >
-                                <AccountCircle />
-                            </IconButton>
+                            <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+                                <Typography variant="body2" sx={{ mr: 1, color: 'white' }}>
+                                    {user.name}
+                                </Typography>
+                                <IconButton
+                                    size="large"
+                                    onClick={handleMenu}
+                                    color="inherit"
+                                    sx={{
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                                        }
+                                    }}
+                                >
+                                    <Badge 
+                                        color="secondary" 
+                                        variant="dot" 
+                                        invisible={!user.isAdmin}
+                                    >
+                                        <AccountCircle />
+                                    </Badge>
+                                </IconButton>
+                            </Box>
+                            
                             <Menu
                                 anchorEl={anchorEl}
                                 open={Boolean(anchorEl)}
                                 onClose={handleClose}
+                                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                             >
-                                <MenuItem onClick={() => { navigate('/profile'); handleClose(); }}>
-                                    Profile
+                                <MenuItem onClick={handleProfileClick}>
+                                    <AccountCircle sx={{ mr: 1 }} />
+                                    My Profile
                                 </MenuItem>
-                                <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                                <MenuItem onClick={handleLogout}>
+                                    Logout
+                                </MenuItem>
                             </Menu>
                         </>
                     ) : (
                         <Link to='/login' style={{ textDecoration: 'none' }}>
-                            <Button color="inherit" style={{ color: "white" }}>Login/Signup</Button>
+                            <Button 
+                                color="inherit" 
+                                variant="outlined"
+                                sx={{ 
+                                    color: "white",
+                                    borderColor: "white",
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                        borderColor: "white"
+                                    }
+                                }}
+                            >
+                                Login / Sign Up
+                            </Button>
                         </Link>
                     )}
                 </Toolbar>

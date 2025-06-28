@@ -7,14 +7,13 @@ import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import { useNavigate } from 'react-router-dom';
 
-const Home = () => {
+const Home = ({ user }) => {
     const [groups, setGroups] = useState([]);
     const [userGroups, setUserGroups] = useState([]);
-    const [currentUserId] = useState('user1');
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Mock groups data
+        // Static mock groups data - no backend connection
         const mockGroups = [
             {
                 _id: 'group1',
@@ -59,36 +58,51 @@ const Home = () => {
                     { _id: 'user7', name: 'Frank Miller' }
                 ],
                 creator: { _id: 'user7', name: 'Frank Miller' }
+            },
+            {
+                _id: 'group5',
+                title: 'Chemistry Study Sessions',
+                subject: 'Chemistry',
+                description: 'Organic and Inorganic Chemistry problem solving',
+                members: [
+                    { _id: 'user8', name: 'Grace Lee' },
+                    { _id: 'user9', name: 'Henry Chen' }
+                ],
+                creator: { _id: 'user8', name: 'Grace Lee' }
             }
         ];
         
         setGroups(mockGroups);
-        // User is already in groups 1 and 2
+        // Mock: User is initially in groups 1 and 2
         setUserGroups(['group1', 'group2']);
     }, []);
 
     const joinGroup = (groupId) => {
+        const currentUserId = user?._id || 'user1';
+        
         if (!userGroups.includes(groupId)) {
             setUserGroups([...userGroups, groupId]);
-            // Update the groups to reflect new member count
+            // Update the groups to reflect new member
             setGroups(prevGroups => 
                 prevGroups.map(group => 
                     group._id === groupId 
                         ? {
                             ...group,
-                            members: [...group.members, { _id: currentUserId, name: 'Demo User' }]
+                            members: [...group.members, { _id: currentUserId, name: user?.name || 'Demo User' }]
                         }
                         : group
                 )
             );
-            alert('Joined group successfully!');
+            alert('Successfully joined the group!');
         }
     };
 
     const leaveGroup = (groupId) => {
+        const currentUserId = user?._id || 'user1';
+        
         if (userGroups.includes(groupId)) {
             setUserGroups(userGroups.filter(id => id !== groupId));
-            // Update the groups to reflect reduced member count
+            // Update the groups to remove the member
             setGroups(prevGroups => 
                 prevGroups.map(group => 
                     group._id === groupId 
@@ -99,7 +113,7 @@ const Home = () => {
                         : group
                 )
             );
-            alert('Left group successfully!');
+            alert('Successfully left the group!');
         }
     };
 
@@ -108,62 +122,76 @@ const Home = () => {
     };
 
     const isUserLoggedIn = () => {
-        return true; // Always logged in for demo
+        return user !== null;
     };
 
     return (
-        <Grid container spacing={3} sx={{ padding: 2 }}>
-            {groups.map((group) => (
-                <Grid item xs={12} sm={6} md={4} key={group._id}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6">{group.title}</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Subject: {group.subject}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                {group.description}
-                            </Typography>
-                            <Typography variant="body2">
-                                Members: {group.members.length}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Created by: {group.creator?.name}
-                            </Typography>
-                        </CardContent>
-                        <CardActions>
-                            <Button 
-                                size="small" 
-                                onClick={() => navigate(`/group/${group._id}`)}
-                            >
-                                View Details
-                            </Button>
-                            
-                            {isUserLoggedIn() && (
-                                isUserInGroup(group._id) ? (
-                                    <Button 
-                                        size="small" 
-                                        variant="outlined"
-                                        color="secondary"
-                                        onClick={() => leaveGroup(group._id)}
-                                    >
-                                        Leave Group
-                                    </Button>
-                                ) : (
-                                    <Button 
-                                        size="small" 
-                                        variant="contained"
-                                        onClick={() => joinGroup(group._id)}
-                                    >
-                                        Join Group
-                                    </Button>
-                                )
-                            )}
-                        </CardActions>
-                    </Card>
-                </Grid>
-            ))}
-        </Grid>
+        <div style={{ padding: '20px' }}>
+            <Typography variant="h4" gutterBottom>
+                Study Groups
+            </Typography>
+            
+            {!user && (
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                    Please log in to join study groups.
+                </Typography>
+            )}
+
+            <Grid container spacing={3}>
+                {groups.map((group) => (
+                    <Grid item xs={12} sm={6} md={4} key={group._id}>
+                        <Card>
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom>
+                                    {group.title}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Subject: {group.subject}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                    {group.description}
+                                </Typography>
+                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                    Members: {group.members.length}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Created by: {group.creator?.name}
+                                </Typography>
+                            </CardContent>
+                            <CardActions>
+                                <Button 
+                                    size="small" 
+                                    onClick={() => navigate(`/group/${group._id}`)}
+                                >
+                                    View Details
+                                </Button>
+                                
+                                {isUserLoggedIn() && (
+                                    isUserInGroup(group._id) ? (
+                                        <Button 
+                                            size="small" 
+                                            variant="outlined"
+                                            color="secondary"
+                                            onClick={() => leaveGroup(group._id)}
+                                        >
+                                            Leave Group
+                                        </Button>
+                                    ) : (
+                                        <Button 
+                                            size="small" 
+                                            variant="contained"
+                                            onClick={() => joinGroup(group._id)}
+                                        >
+                                            Join Group
+                                        </Button>
+                                    )
+                                )}
+                            </CardActions>
+                        </Card>
+                    </Grid>
+                ))}
+            </Grid>
+        </div>
     );
 };
 

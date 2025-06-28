@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -11,13 +11,13 @@ import EditGroup from './components/EditGroup';
 import AdminDashboard from './components/AdminDashboard';
 
 const App = () => {
-    // Mock user data for standalone frontend - starts as logged in user
+    // Mock user data for standalone frontend
     const [user, setUser] = useState({
         _id: 'user1',
         name: 'Demo User',
         email: 'demo@example.com',
         contactNumber: '1234567890',
-        role: 'user', // Changed from isAdmin to role for consistency
+        role: 'user',
         isAdmin: false
     });
 
@@ -32,13 +32,13 @@ const App = () => {
             isAdmin: userData?.email === 'admin@example.com'
         };
         setUser(mockUser);
-        console.log('User logged in:', mockUser);
+        console.log('Mock login successful:', mockUser);
     };
 
     const handleLogout = () => {
         // Mock logout - clear user data
         setUser(null);
-        console.log('User logged out');
+        console.log('Mock logout successful');
     };
 
     return (
